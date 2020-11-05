@@ -7,6 +7,10 @@ Nos, como alunos da FT, iremos fazer um projeto com a linguagem C(voltado para p
 
 ### Compilando
 
+  Use o seguinte comando no sistema **Linux**:
+  
+  > gcc main.c -fopenmp -o programa
+  
 ### Após compilado
 
   ```./programa y w v arqA.dat arqB.dat arqC.dat arqD.dat```
@@ -23,7 +27,7 @@ Onde:
 
 Observe um exemplo a seguir.
 
- ```./prog 10 20 15 arqA.dat arqB.dat arqC.dat arqD.dat```
+ ```./programa 10 20 15 arqA.dat arqB.dat arqC.dat arqD.dat```
 
 ## Integrantes
 + Raphael Lira dos Santos 223865
