@@ -9,7 +9,7 @@ Nos, como alunos da FT, iremos fazer um projeto com a linguagem C(voltado para p
 
 ### Após compilado
 
-  """./programa y w v arqA.dat arqB.dat arqC.dat arqD.dat"""
+  ```./programa y w v arqA.dat arqB.dat arqC.dat arqD.dat```
 
 Onde:
 + ./programa é o programa que resolverá o problema.
@@ -23,7 +23,7 @@ Onde:
 
 Observe um exemplo a seguir.
 
- """./prog 10 20 15 arqA.dat arqB.dat arqC.dat arqD.dat"""
+ ```./prog 10 20 15 arqA.dat arqB.dat arqC.dat arqD.dat```
 
 ## Integrantes
 + Raphael Lira dos Santos 223865
