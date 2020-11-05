@@ -23,7 +23,6 @@ float * gerarMatriz(char * path,int dimensaoA,int dimensaoB){
 	float * matriz = alocar(dimensaoA,dimensaoB);	
 	int MAX = dimensaoA * dimensaoB;
 	
-	#pragma omp parallel for shared(matriz,arquivo)
 	for(int i = 0;i<MAX;i++){
 		matriz[i] = random_number();
 		fprintf(arquivo,"%.2f\n",matriz[i]);
@@ -62,11 +61,7 @@ int main(int argc,char ** argv){
 		matrizA = gerarMatriz(argv[4],y,w);
 		matrizB = gerarMatriz(argv[5],w,v);
 		matrizC = gerarMatriz(argv[6],v,1);
-	}
-	
-	FILE * arquivo;
-	arquivo = fopen(argv[7],"w");
-	
+	}	
 	
 	///calcula a matriz D
 	#pragma omp parallel shared(y,w,v,matrizA,matrizB,matrizC,matrizD,arquivo) private(i,j,k)
@@ -80,18 +75,23 @@ int main(int argc,char ** argv){
 					result+= (matrizA[posicao(i,j,w)] * matrizB[posicao(j,k,v)]) * matrizC[posicao(k,1,1)];
 				}
 			}	
-			fprintf(arquivo,"%.2f\n",result);
-			matrizD[posicao(y,1,1)] = result;
-			
+			matrizD[posicao(y,1,1)] = result;			
 		}
 		
+	}
+	
+	FILE * arquivo;
+	arquivo = fopen(argv[7],"w");
+	
+	for(i=0;i<y;i++){
+		fprintf(arquivo,"%.2f\n",matrizD[posicao(y,1,1)]);
 	}
 	
 	fclose(arquivo);
 	
 	result = 0;
 	//faz a soma da redução
-	#pragma omp parallel shared(y,w,v,matrizA,matrizB,matrizC,matrizD,arquivo) private(i,j,k)
+	#pragma omp parallel shared(matrizD) private(i)
 	{
 		#pragma omp parallel for reduction(+:result) shared(matrizD) private(i)
 		for(i=0;i<y;i++){
