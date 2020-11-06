@@ -52,7 +52,7 @@ float * lerArquivo(char * path,int dimensaoA,int dimensaoB){
 	int i = 0;
 	
 	for(i = 0;i<MAX;i++){
-		fscanf(arquivo,"%f\n", &matriz[i]);
+		fscanf(arquivo,"%f\n", &matriz[i]);	
 	}
 	
 	fclose(arquivo);
@@ -70,7 +70,7 @@ int main(int argc,char ** argv){
 	}
 	
 	int 
-		i,j,k;
+		i,j,k,l;
 		
 	int y = atoi(argv[1]);
 	int w = atoi(argv[2]);
@@ -88,22 +88,30 @@ int main(int argc,char ** argv){
 		return 1;
 	}
 	
+	
+	
+	
 	///calcula a matriz D
-	#pragma omp parallel shared(y,w,v,matrizA,matrizB,matrizC,matrizD,arquivo) private(i,j,k)
+	#pragma omp parallel shared(y,w,v,matrizA,matrizB,matrizC,matrizD) private(i,j,k,l,result)
 	{
 		
-		#pragma omp parallel for collapse(3) shared(y,w,v,matrizA,matrizB,matrizC,matrizD,arquivo) private(i,j,k)
+		#pragma omp parallel for collapse(3) shared(y,w,v,matrizA,matrizB,matrizC,matrizD) private(i,j,k,l,result)
 		for(i=0;i<y;i++){
-			matrizD[posicao(y,1,1)] = 0;
-			for(j=0;j<w;j++){
-				for(k=0;k<v;k++){
-					matrizD[posicao(y,1,1)] += (matrizA[posicao(i,j,w)] * matrizB[posicao(j,k,v)]) * matrizC[posicao(k,1,1)];
+			result = 0;						
+			for(j=0;j<w;j++){							
+				for(k=0;k<v;k++){	
+					result += (matrizA[posicao(i,j,w)] * matrizB[posicao(j,k,v)]);										
 				}
-			}	
+			}			
+			for(l=0;l<v;l++){								
+				result += matrizC[l];
+			}		
+			matrizD[i] = result;
 		}
 		
 	}
-		
+	
+	
 	
 	result = 0;
 	//faz a soma da redução
@@ -111,23 +119,20 @@ int main(int argc,char ** argv){
 	{
 		#pragma omp parallel for reduction(+:result) shared(matrizD) private(i)
 		for(i=0;i<y;i++){
-			result = matrizD[posicao(y,1,1)];
+			result+= matrizD[i];
 		}
 	}
+	
+	printf("%.2f",result);
 	
 	FILE * arquivo;
 	arquivo = fopen(argv[7],"w");
 	
 	for(i=0;i<y;i++){
-		fprintf(arquivo,"%.2f\n",matrizD[posicao(y,1,1)]);
+		fprintf(arquivo,"%.2f\n",matrizD[i]);
 	}
 	
-	fclose(arquivo);
-	
-	
-	printf("%.2f",result);
-	
-	
+	fclose(arquivo);	
 	
     return 0;
 }
