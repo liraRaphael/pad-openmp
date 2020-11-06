@@ -84,7 +84,7 @@ int main(int argc,char ** argv){
 	}
 	
 	int 
-		i,j,k,l;
+		i,j,k;
 		
   // transforma o argumento em inteiro
 	int y = atoi(argv[1]);
@@ -98,6 +98,7 @@ int main(int argc,char ** argv){
 		* matrizB = lerArquivo(argv[5],w,v), 
 		* matrizC = lerArquivo(argv[6],v,1), 
 		* matrizD = alocar(y,1),
+    * matrizAux = alocar(y,v),
 		result;	
 		
   // caso falhe algum arquivo
@@ -105,40 +106,46 @@ int main(int argc,char ** argv){
 		return 1;
 	}
 	
-	
-	
+ 
 	
 	///calcula a matriz D
-	#pragma omp parallel for shared(y,w,v,matrizA,matrizB,matrizC,matrizD) private(i,j,k,l,result)
-	for(i=0;i<y;i++){	
-    result = 0;								
-		for(j=0;j<w;j++){							
-			for(k=0;k<v;k++){	
-				result += (matrizA[posicao(i,j,w)] * matrizB[posicao(j,k,v)]);										
+	#pragma omp parallel for shared(y,w,v,matrizA,matrizB,matrizC,matrizD,matrizAux) private(i,j,k)
+	for(i=0;i<y;i++){	       							
+		for(j=0;j<v;j++){	
+      matrizAux[posicao(i,j,v)] = 0.0;           						
+			for(k=0;k<w;k++){	
+				matrizAux[posicao(i,j,v)] += (matrizA[posicao(i,k,w)] * matrizB[posicao(k,j,v)]) ;										
 			}
-		}			
-		for(l=0;l<v;l++){								
-			result += matrizC[l];
-		}		
-		matrizD[i] = result;
+		}					
 	}
-	
  
+
+  ///calcula a matriz D
+	#pragma omp parallel for shared(y,w,v,matrizA,matrizB,matrizC,matrizD) private(i,j,result)
+  for(i=0;i<y;i++){	 
+    matrizD[i] = 0.0;
+    for(j=0;j<v;j++){	
+      
+		  matrizD[i] += matrizAux[posicao(i,j,v)] * matrizC[j];							
+    }	
+  }
+
  
 	
 	
-	result = 0;
+	result = 0.0;
 	//faz a soma da redução
 	#pragma omp parallel shared(matrizD) private(i)
 	{
 		#pragma omp parallel for reduction(+:result) shared(matrizD) private(i)
 		for(i=0;i<y;i++){
+       
 			result+= matrizD[i];
 		}
 	}
 	
   // printa a redução
-	printf("%.2f",result);
+	printf("%f",result);
 	
   // abre o arquivo para gravação da matriz D
 	FILE * arquivo;
