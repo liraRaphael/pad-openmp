@@ -74,6 +74,81 @@ float * lerArquivo(char * path,int dimensaoA,int dimensaoB){
 	
 }
 
+/**
+*
+*
+* - Calcula a matriz A*B
+*
+*/
+float * calculaMatrizAB(int y, int w, int v,float * matrizA,float * matrizB){
+
+  int
+    i,j,k;
+    
+  float
+    * ab = alocar(y,v); // gera uma matriz AByxv = Ayxw * Bwxv
+
+  
+	#pragma omp parallel for shared(y,w,v,matrizA,matrizB,ab) private(i,j,k)
+	for(i=0;i<y;i++){	       							
+		for(j=0;j<v;j++){	
+       //zera a matriz temporaria para fazer a somatória
+      ab[posicao(i,j,v)] = 0.0;           						
+			for(k=0;k<w;k++){	
+				ab[posicao(i,j,v)] += (matrizA[posicao(i,k,w)] * matrizB[posicao(k,j,v)]) ;										
+			}
+		}					
+	}
+ 
+   return ab;
+ 
+} 
+
+/**
+*
+*
+* - Calcula a matriz C
+*
+*/
+float * calculaMatrizD(int y, int v,float * matrizC,float * matrizAB){
+
+  int
+    i,j,k;
+    
+  float
+    * matrizD = alocar(y,1); // gera o "vetor" D
+
+  
+	///calcula a matriz D = aux * C
+	#pragma omp parallel for shared(y,v,matrizC,matrizD) private(i,j)
+  for(i=0;i<y;i++){	 
+    matrizD[i] = 0.0;
+    for(j=0;j<v;j++){	      
+		  matrizD[i] += matrizAB[posicao(i,j,v)] * matrizC[j];							
+    }	
+  }
+ 
+   return matrizD;
+ 
+} 
+
+double reducaoMatrizD(int y, float * matrizD){
+  
+  int
+    i;
+  
+  double
+    reducao = 0;
+    
+	#pragma omp parallel for reduction(+:reducao) shared(matrizD,y) private(i)
+	for(i=0;i<y;i++){             
+		reducao += matrizD[i];
+	}
+ 
+   return reducao;
+ 
+}
+
 
 int main(int argc,char ** argv){
 	
@@ -95,11 +170,11 @@ int main(int argc,char ** argv){
 		* matrizA = lerArquivo(argv[4],y,w), 
 		* matrizB = lerArquivo(argv[5],w,v), 
 		* matrizC = lerArquivo(argv[6],v,1), 
-		* matrizD = alocar(y,1),
-    * matrizAux = alocar(y,v);
+		* matrizD,
+    * matrizAB;
   
   double
-		result;	//salvara o resultado da redução
+		reducao;	//salvara o resultado da redução
 		
   // caso falhe algum arquivo
 	if(matrizA == NULL || matrizB == NULL || matrizC == NULL){		
@@ -115,54 +190,12 @@ int main(int argc,char ** argv){
    *
    *
    */
-	
-	///calcula a matriz AB em matriz auxiliar
-	#pragma omp parallel for shared(y,w,v,matrizA,matrizB,matrizAux) private(i,j,k)
-	for(i=0;i<y;i++){	       							
-		for(j=0;j<v;j++){	
-      matrizAux[posicao(i,j,v)] = 0.0;           						
-			for(k=0;k<w;k++){	
-				matrizAux[posicao(i,j,v)] += (matrizA[posicao(i,k,w)] * matrizB[posicao(k,j,v)]) ;										
-			}
-		}					
-	}
- 
+   
+   matrizAB = calculaMatrizAB(y,w,v,matrizA,matrizB);
+   matrizD = calculaMatrizD(y,v,matrizC,matrizAB);
+   reducao = reducaoMatrizD(y,matrizD);
+	  
 
-  ///calcula a matriz D = aux * C
-	#pragma omp parallel for shared(y,v,matrizC,matrizD) private(i,j)
-  for(i=0;i<y;i++){	 
-    matrizD[i] = 0.0;
-    for(j=0;j<v;j++){	      
-		  matrizD[i] += ((float) matrizAux[posicao(i,j,v)]) * ((float) matrizC[j]);							
-    }	
-  }
-
- 
-	/*
-   *
-   *
-   * - FIM DA EXECUÇÃO DO CALCULO DAS MATRIZES 
-   *
-   *
-   */
-	
- 
- 
- 
-	/*
-   *
-   *
-   * - EXECUÇÃO DE REDUÇÃO  
-   *
-   *
-   */
-	//faz a soma da redução
-  result = 0.000000;
-	#pragma omp parallel for reduction(+:result) shared(matrizD) private(i)
-	for(i=0;i<y;i++){             
-		result+= matrizD[i];
-    //printf("result =%f --- matriz D = %f\n",result,matrizD[i]);
-	}
   /*
    *
    *
@@ -175,7 +208,7 @@ int main(int argc,char ** argv){
    
 	
   // printa a redução
-	printf("%f",result);
+	printf("%f",reducao);
 	
   // abre o arquivo para gravação da matriz D
 	FILE * arquivo;
