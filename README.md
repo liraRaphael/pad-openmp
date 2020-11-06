@@ -11,8 +11,7 @@ Use o seguinte comando no sistema **Linux**:
 
 1. vá até a pasta src
 
-2.
-> make
+2. > make
   
 ### Após compilado
 
@@ -32,7 +31,7 @@ Onde:
 
 Observe um exemplo a seguir.
 
- ```./programa 10 20 15 arqA.dat arqB.dat arqC.dat arqD.dat```
+ > ./programa 10 20 15 arqA.dat arqB.dat arqC.dat arqD.dat
 
 ## Integrantes
 + Raphael Lira dos Santos 223865
