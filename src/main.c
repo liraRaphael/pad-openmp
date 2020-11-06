@@ -4,6 +4,50 @@
 #define posicao(I, J, COLUNAS) ((I)*(COLUNAS) + (J))
 
 
+/**
+ *
+ *  - TRABALHO DE OPENMP
+ *  TELEPROG
+ *  - Raphael Lira dos Santos 223865
+ *  - Elziele Da Rocha 196396
+ *
+**/
+
+
+
+
+int 
+    y,w,v; //variavel que guardará os valores da coluna
+
+
+
+/***
+ *
+ *
+ *
+ * - CABEÇALHO DAS FUNÇÕES
+ *
+ *
+**/
+float random_number();
+float * alocar(int dimensaoA,int dimensaoB);
+float * gerarMatriz(char * path,int dimensaoA,int dimensaoB);
+float * lerArquivo(char * path,int dimensaoA,int dimensaoB);
+float * calculaMatrizAB(float * matrizA,float * matrizB);
+float * calculaMatrizD(float * matrizC,float * matrizAB);
+double reducaoMatrizD(float * matrizD);
+
+
+
+
+/***
+ *
+ *
+ *
+ * - FUNÇÕES
+ *
+ *
+**/
 //gerador de numeros aleatórios
 float random_number(){
 	return ((float) (rand() % 2000)/100)  - 10;
@@ -43,6 +87,7 @@ float * gerarMatriz(char * path,int dimensaoA,int dimensaoB){
 	
 }
 
+
 // le o arquivo 
 float * lerArquivo(char * path,int dimensaoA,int dimensaoB){
 	
@@ -80,7 +125,7 @@ float * lerArquivo(char * path,int dimensaoA,int dimensaoB){
 * - Calcula a matriz A*B
 *
 */
-float * calculaMatrizAB(int y, int w, int v,float * matrizA,float * matrizB){
+float * calculaMatrizAB(float * matrizA,float * matrizB){
 
   int
     i,j,k;
@@ -110,7 +155,7 @@ float * calculaMatrizAB(int y, int w, int v,float * matrizA,float * matrizB){
 * - Calcula a matriz C
 *
 */
-float * calculaMatrizD(int y, int v,float * matrizC,float * matrizAB){
+float * calculaMatrizD(float * matrizC,float * matrizAB){
 
   int
     i,j,k;
@@ -132,7 +177,7 @@ float * calculaMatrizD(int y, int v,float * matrizC,float * matrizAB){
  
 } 
 
-double reducaoMatrizD(int y, float * matrizD){
+double reducaoMatrizD(float * matrizD){
   
   int
     i;
@@ -150,6 +195,15 @@ double reducaoMatrizD(int y, float * matrizD){
 }
 
 
+
+/***
+ *
+ *
+ *
+ * - MAIN
+ *
+ *
+**/
 int main(int argc,char ** argv){
 	
   // verifica se todos os argumentos estão
@@ -157,12 +211,14 @@ int main(int argc,char ** argv){
 		printf("argumentos invalidos!\n");
 		return 1;
 	}
-	
-	int 
-		i,j,k,
-    y = atoi(argv[1]),
-    w = atoi(argv[2]),
-    v = atoi(argv[3]);
+ 
+   // atribui os valores de dimensão da matriz
+  y = atoi(argv[1]);
+  w = atoi(argv[2]);
+  v = atoi(argv[3]);
+  
+  int
+    i;
 		
 
   //aloca e le os arquivos do vetor
@@ -181,31 +237,13 @@ int main(int argc,char ** argv){
 		return 1;
 	}
  
- 
-	
-   /*
-   *
-   *
-   * - EXECUÇÃO DO CALCULO DAS MATRIZES 
-   *
-   *
-   */
+
    
-   matrizAB = calculaMatrizAB(y,w,v,matrizA,matrizB);
-   matrizD = calculaMatrizD(y,v,matrizC,matrizAB);
-   reducao = reducaoMatrizD(y,matrizD);
+   matrizAB = calculaMatrizAB(matrizA,matrizB);
+   matrizD = calculaMatrizD(matrizC,matrizAB);
+   reducao = reducaoMatrizD(matrizD);
 	  
 
-  /*
-   *
-   *
-   * - FIM DA EXECUÇÃO DE REDUÇÃO  
-   *
-   *
-   */
-   
-   
-   
 	
   // printa a redução
 	printf("%f",reducao);
