@@ -84,13 +84,11 @@ int main(int argc,char ** argv){
 	}
 	
 	int 
-		i,j,k;
+		i,j,k,
+    y = atoi(argv[1]),
+    w = atoi(argv[2]),
+    v = atoi(argv[3]);
 		
-  // transforma o argumento em inteiro
-	int y = atoi(argv[1]);
-	int w = atoi(argv[2]);
-	int v = atoi(argv[3]);
-	
 
   //aloca e le os arquivos do vetor
 	float 
@@ -98,18 +96,28 @@ int main(int argc,char ** argv){
 		* matrizB = lerArquivo(argv[5],w,v), 
 		* matrizC = lerArquivo(argv[6],v,1), 
 		* matrizD = alocar(y,1),
-    * matrizAux = alocar(y,v),
-		result;	
+    * matrizAux = alocar(y,v);
+  
+  double
+		result;	//salvara o resultado da redução
 		
   // caso falhe algum arquivo
 	if(matrizA == NULL || matrizB == NULL || matrizC == NULL){		
 		return 1;
 	}
-	
+ 
  
 	
-	///calcula a matriz D
-	#pragma omp parallel for shared(y,w,v,matrizA,matrizB,matrizC,matrizD,matrizAux) private(i,j,k)
+   /*
+   *
+   *
+   * - EXECUÇÃO DO CALCULO DAS MATRIZES 
+   *
+   *
+   */
+	
+	///calcula a matriz AB em matriz auxiliar
+	#pragma omp parallel for shared(y,w,v,matrizA,matrizB,matrizAux) private(i,j,k)
 	for(i=0;i<y;i++){	       							
 		for(j=0;j<v;j++){	
       matrizAux[posicao(i,j,v)] = 0.0;           						
@@ -120,29 +128,51 @@ int main(int argc,char ** argv){
 	}
  
 
-  ///calcula a matriz D
-	#pragma omp parallel for shared(y,w,v,matrizA,matrizB,matrizC,matrizD) private(i,j,result)
+  ///calcula a matriz D = aux * C
+	#pragma omp parallel for shared(y,v,matrizC,matrizD) private(i,j)
   for(i=0;i<y;i++){	 
     matrizD[i] = 0.0;
-    for(j=0;j<v;j++){	
-      
-		  matrizD[i] += matrizAux[posicao(i,j,v)] * matrizC[j];							
+    for(j=0;j<v;j++){	      
+		  matrizD[i] += ((float) matrizAux[posicao(i,j,v)]) * ((float) matrizC[j]);							
     }	
   }
 
  
+	/*
+   *
+   *
+   * - FIM DA EXECUÇÃO DO CALCULO DAS MATRIZES 
+   *
+   *
+   */
 	
-	
-	result = 0.0;
+ 
+ 
+ 
+	/*
+   *
+   *
+   * - EXECUÇÃO DE REDUÇÃO  
+   *
+   *
+   */
 	//faz a soma da redução
-	#pragma omp parallel shared(matrizD) private(i)
-	{
-		#pragma omp parallel for reduction(+:result) shared(matrizD) private(i)
-		for(i=0;i<y;i++){
-       
-			result+= matrizD[i];
-		}
+  result = 0.000000;
+	#pragma omp parallel for reduction(+:result) shared(matrizD) private(i)
+	for(i=0;i<y;i++){             
+		result+= matrizD[i];
+    //printf("result =%f --- matriz D = %f\n",result,matrizD[i]);
 	}
+  /*
+   *
+   *
+   * - FIM DA EXECUÇÃO DE REDUÇÃO  
+   *
+   *
+   */
+   
+   
+   
 	
   // printa a redução
 	printf("%f",result);
