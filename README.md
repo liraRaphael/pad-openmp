@@ -3,13 +3,14 @@
 ## Sobre
 Nos, como alunos da FT, iremos fazer um projeto com a linguagem C(voltado para programação de alto desempenho), usando a biblioteca OpenMP
 
+
 ## Como usar
 
 ### Compilando
 
 Use o seguinte comando no sistema **Linux**:
 
-1. vá até a pasta src
+1. vá até a pasta pad-openmp/src
 
 2. > make
   
@@ -31,7 +32,12 @@ Onde:
 
 Observe um exemplo a seguir.
 
- > ./programa 10 20 15 arqA.dat arqB.dat arqC.dat arqD.dat
+1. vá até a pasta pad-openmp/bin
+
+2. >  ./programa 10 10 10 arqA.dat arqB.dat arqC.dat arqD.dat
+
+### Observação
+Caso não haja os respectivos arquivos, o programa gerará aleatoriamente
 
 ## Integrantes
 + Raphael Lira dos Santos 223865

@@ -92,25 +92,22 @@ int main(int argc,char ** argv){
 	
 	
 	///calcula a matriz D
-	#pragma omp parallel shared(y,w,v,matrizA,matrizB,matrizC,matrizD) private(i,j,k,l,result)
-	{
-		
-		#pragma omp parallel for collapse(3) shared(y,w,v,matrizA,matrizB,matrizC,matrizD) private(i,j,k,l,result)
-		for(i=0;i<y;i++){
-			result = 0;						
-			for(j=0;j<w;j++){							
-				for(k=0;k<v;k++){	
-					result += (matrizA[posicao(i,j,w)] * matrizB[posicao(j,k,v)]);										
-				}
-			}			
-			for(l=0;l<v;l++){								
-				result += matrizC[l];
-			}		
-			matrizD[i] = result;
-		}
-		
+	#pragma omp parallel for shared(y,w,v,matrizA,matrizB,matrizC,matrizD) private(i,j,k,l,result)
+	for(i=0;i<y;i++){	
+    result = 0;								
+		for(j=0;j<w;j++){							
+			for(k=0;k<v;k++){	
+				result += (matrizA[posicao(i,j,w)] * matrizB[posicao(j,k,v)]);										
+			}
+		}			
+		for(l=0;l<v;l++){								
+			result += matrizC[l];
+		}		
+		matrizD[i] = result;
 	}
 	
+ 
+ 
 	
 	
 	result = 0;
