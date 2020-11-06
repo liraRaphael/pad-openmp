@@ -16,9 +16,9 @@ Use o seguinte comando no sistema **Linux**:
   
 ### Após compilado
 
-Vá até a pasta bin:
+1. Vá até a pasta pad-openmp/bin:
 
-> ./programa y w v arqA.dat arqB.dat arqC.dat arqD.dat
+2. > ./programa y w v arqA.dat arqB.dat arqC.dat arqD.dat
 
 Onde:
 + ./programa é o programa que resolverá o problema.
