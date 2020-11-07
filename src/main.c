@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<omp.h>
+#include<time.h>
 #define posicao(I, J, COLUNAS) ((I)*(COLUNAS) + (J))
 
 
@@ -8,8 +9,8 @@
  *
  *  - TRABALHO DE OPENMP
  *  TELEPROG
- *  - Raphael Lira dos Santos 223865
- *  - Elziele Da Rocha 196396
+ *    - Raphael Lira dos Santos 223865
+ *    - Elziele Da Rocha 196396
  *
 **/
 
@@ -219,6 +220,9 @@ int main(int argc,char ** argv){
   
   int
     i;
+    
+  clock_t 
+		tIni,tFim;
 		
 
   //aloca e le os arquivos do vetor
@@ -238,15 +242,19 @@ int main(int argc,char ** argv){
 	}
  
 
-   
+   //grava o tempo incial
+   tIni = clock();
+     
    matrizAB = calculaMatrizAB(matrizA,matrizB);
    matrizD = calculaMatrizD(matrizC,matrizAB);
    reducao = reducaoMatrizD(matrizD);
 	  
+   //grava o tempo final
+   tFim = clock();
 
 	
-  // printa a redução
-	printf("%f",reducao);
+  // printa a redução e o tempo
+	printf("o resultado da reducao foi: %f - o tempo exercido foi de %f segundos\n",reducao,(double) (tFim - tIni)/CLOCKS_PER_SEC);
 	
   // abre o arquivo para gravação da matriz D
 	FILE * arquivo;
