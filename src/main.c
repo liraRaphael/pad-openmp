@@ -7,7 +7,7 @@
 
 /**
  *
- *  - TRABALHO DE OPENMP
+ *  - TRABALHO DE PAD - Código puro sem ás devidas otimizações
  *  TELEPROG
  *    - Raphael Lira dos Santos 223865
  *    - Elziele Da Rocha 196396
@@ -15,10 +15,6 @@
 **/
 
 
-
-
-int 
-    y,w,v; //variavel que guardará os valores da coluna
 
 
 
@@ -35,10 +31,29 @@ float * alocar(int dimensaoA,int dimensaoB);
 float * gerarMatriz(char * path,int dimensaoA,int dimensaoB);
 float * lerArquivo(char * path,int dimensaoA,int dimensaoB);
 float * calculaMatrizAB(float * matrizA,float * matrizB);
-float * calculaMatrizD(float * matrizC,float * matrizAB);
-double reducaoMatrizD(float * matrizD);
+float * calculaMatrizDABC();
+double reducaoMatrizD();
 
 
+
+/***
+ *
+ *
+ *
+ * - Declaração das variaveisVariavies 
+ *
+ *
+**/
+int 
+    y,w,v; //variavel que guardará os valores da coluna
+
+//aloca e le os arquivos do vetor
+float 
+	* matrizA, 
+	* matrizB, 
+	* matrizC, 
+	* matrizD,
+	* matrizAB;
 
 
 /***
@@ -55,10 +70,24 @@ float random_number(){
 }
 
 
+// inicializa uma matriz com o valor 0.0
+float * zeraMatriz(float * matriz, int dimensaoA, int dimensaoB){
+	int 
+		i,
+		MAX = dimensaoA * dimensaoB;
+	
+	#pragma omp parallel for shared(matriz,MAX) private(i)	
+	for(i = 0;i<MAX;i++){
+		matriz[i] = 0.0;
+	}	
+	
+	return matriz;
+}
+
 // aloca dinamicamente como proposto pelo professor
 float * alocar(int dimensaoA,int dimensaoB){
 	float * ponteiro;
-	ponteiro = malloc(sizeof(float) * dimensaoA * dimensaoB);
+	ponteiro = malloc(sizeof(float) * dimensaoA * dimensaoB);	
 	return ponteiro;
 }
 
@@ -66,17 +95,17 @@ float * alocar(int dimensaoA,int dimensaoB){
 // gera a matriz de forma aleatória
 float * gerarMatriz(char * path,int dimensaoA,int dimensaoB){
 	
-  // manipula o arquivo para escrita
+  	// manipula o arquivo para escrita
 	FILE * arquivo;
 	arquivo = fopen(path,"w");
 	
-  //aloca e define o tamanho total
+  	//aloca e define o tamanho total
 	float * matriz = alocar(dimensaoA,dimensaoB);	
 	int MAX = dimensaoA * dimensaoB;
 	
 	int i = 0;
 		
-  //faz o loop, atribuindo valor aleatório e salva o arquivo
+  	//faz o loop, atribuindo valor aleatório e salva o arquivo
 	for(i = 0;i<MAX;i++){
 		matriz[i] = random_number();
 		fprintf(arquivo,"%.2f\n",matriz[i]);
@@ -92,24 +121,24 @@ float * gerarMatriz(char * path,int dimensaoA,int dimensaoB){
 // le o arquivo 
 float * lerArquivo(char * path,int dimensaoA,int dimensaoB){
 	
-  //abre o arquivo para leitura
+  	//abre o arquivo para leitura
 	FILE * arquivo;
 	arquivo = fopen(path,"r");
 	
-  //caso o arquivo não exista, gera um novo
+  	//caso o arquivo não exista, gera um novo
 	if(!arquivo){		
-		return gerarMatriz(path,dimensaoA,dimensaoB);
+		return NULL;
 	}
 		
 		
-  // aloca a matriz dinamicamente
+  	// aloca a matriz dinamicamente
 	float * matriz = alocar(dimensaoA,dimensaoB);	
 	int MAX = dimensaoA * dimensaoB;
 	
 	int i = 0;
 	
  
-   // faz o loop de leitura
+   	// faz o loop de leitura
 	for(i = 0;i<MAX;i++){
 		fscanf(arquivo,"%f\n", &matriz[i]);	
 	}
@@ -120,78 +149,55 @@ float * lerArquivo(char * path,int dimensaoA,int dimensaoB){
 	
 }
 
+
+
 /**
 *
 *
-* - Calcula a matriz A*B
+* - Calcula a matriz D = (A x B) x C
 *
 */
-float * calculaMatrizAB(float * matrizA,float * matrizB){
+float * calculaMatrizDABC(){
 
-  int
-    i,j,k;
-    
-  float
-    * ab = alocar(y,v); // gera uma matriz AByxv = Ayxw * Bwxv
-
-  
-	#pragma omp parallel for shared(y,w,v,matrizA,matrizB,ab) private(i,j,k)
+	int
+		i,j,k;
+		  
+	#pragma omp parallel for collapse(3) shared(y,w,v,matrizA,matrizB,matrizAB) private(i,j,k)
 	for(i=0;i<y;i++){	       							
-		for(j=0;j<v;j++){	
-       //zera a matriz temporaria para fazer a somatória
-      ab[posicao(i,j,v)] = 0.0;           						
+		for(j=0;j<v;j++){	         						
 			for(k=0;k<w;k++){	
-				ab[posicao(i,j,v)] += (matrizA[posicao(i,k,w)] * matrizB[posicao(k,j,v)]) ;										
+				matrizAB[posicao(i,j,v)] += (matrizA[posicao(i,k,w)] * matrizB[posicao(k,j,v)]) ;										
 			}
 		}					
 	}
+
+	#pragma omp parallel for collapse(2) shared(y,v,matrizD,matrizC) private(i,j)
+	for(i=0;i<y;i++){	 
+	    for(j=0;j<v;j++){	      
+			  matrizD[i] += matrizAB[posicao(i,j,v)] * matrizC[j];							
+	    }	
+	}
+
  
-   return ab;
+	return matrizD;
  
-} 
+}
 
-/**
-*
-*
-* - Calcula a matriz C
-*
-*/
-float * calculaMatrizD(float * matrizC,float * matrizAB){
 
-  int
-    i,j,k;
-    
-  float
-    * matrizD = alocar(y,1); // gera o "vetor" D
-
+double reducaoMatrizD(){
   
-	///calcula a matriz D = aux * C
-	#pragma omp parallel for shared(y,v,matrizC,matrizD) private(i,j)
-  for(i=0;i<y;i++){	 
-    matrizD[i] = 0.0;
-    for(j=0;j<v;j++){	      
-		  matrizD[i] += matrizAB[posicao(i,j,v)] * matrizC[j];							
-    }	
-  }
- 
-   return matrizD;
- 
-} 
-
-double reducaoMatrizD(float * matrizD){
+	int
+		i;
   
-  int
-    i;
-  
-  double
-    reducao = 0;
+	double
+    	reducao = 0;
     
 	#pragma omp parallel for reduction(+:reducao) shared(matrizD,y) private(i)
 	for(i=0;i<y;i++){             
 		reducao += matrizD[i];
 	}
  
-   return reducao;
+	return reducao;
  
 }
 
@@ -207,67 +213,72 @@ double reducaoMatrizD(float * matrizD){
 **/
 int main(int argc,char ** argv){
 	
-  // verifica se todos os argumentos estão
+  	// verifica se todos os argumentos estão
 	if(argc != 8){
 		printf("argumentos invalidos!\n");
 		return 1;
-	}
+	}	
  
-   // atribui os valores de dimensão da matriz
-  y = atoi(argv[1]);
-  w = atoi(argv[2]);
-  v = atoi(argv[3]);
   
-  int
-    i;
+  	int
+    	i;
     
-  clock_t 
-		tIni,tFim;
-		
-
-  //aloca e le os arquivos do vetor
-	float 
-		* matrizA = lerArquivo(argv[4],y,w), 
-		* matrizB = lerArquivo(argv[5],w,v), 
-		* matrizC = lerArquivo(argv[6],v,1), 
-		* matrizD,
-    * matrizAB;
+	clock_t 
+		tIni,tFim;  	
   
-  double
+  	double
 		reducao;	//salvara o resultado da redução
 		
-  // caso falhe algum arquivo
-	if(matrizA == NULL || matrizB == NULL || matrizC == NULL){		
+		
+	// atribui os valores de dimensão da matriz
+   	y = atoi(argv[1]);
+  	w = atoi(argv[2]);
+  	v = atoi(argv[3]);
+	  
+	// aloca os dados nas matrizes  	
+	matrizA = lerArquivo(argv[4],y,w); 
+	matrizB = lerArquivo(argv[5],w,v); 
+	matrizC = lerArquivo(argv[6],v,1); 
+	
+	// gera uma matriz AB limpa
+	matrizAB = zeraMatriz(alocar(y,v),y,v);
+		
+	if(y == 0 || w == 0 || v == 0){
+		printf("Valor(es) y,w e/ou v invalido(s)!\n");
 		return 1;
 	}
+	
+  	// caso falhe algum arquivo
+	if(matrizA == NULL || matrizB == NULL || matrizC == NULL){	
+		printf("Matriz(es) não carregada(s)!\n");	
+		return 1;
+	} 
  
 
-   //grava o tempo incial
-   tIni = clock();
-     
-   matrizAB = calculaMatrizAB(matrizA,matrizB);
-   matrizD = calculaMatrizD(matrizC,matrizAB);
-   reducao = reducaoMatrizD(matrizD);
-	  
-   //grava o tempo final
-   tFim = clock();
+ 	// gera e zera a "vetor" D
+	matrizD = zeraMatriz(alocar(y,1),y,1);
 
+   	//grava o tempo incial
+   	tIni = clock();     
+   	matrizD = calculaMatrizDABC();
+   	reducao = reducaoMatrizD();	  
+	//grava o tempo final
+	tFim = clock();
 	
-  // printa a redução e o tempo
+  	// printa a redução e o tempo
 	printf("o resultado da reducao foi: %f - o tempo exercido foi de %f segundos\n",reducao,(double) (tFim - tIni)/CLOCKS_PER_SEC);
 	
-  // abre o arquivo para gravação da matriz D
+  	// abre o arquivo para gravação da matriz D
 	FILE * arquivo;
 	arquivo = fopen(argv[7],"w");
 	
-  //faz o loop de gravação
+  	//faz o loop de gravação
 	for(i=0;i<y;i++){
 		fprintf(arquivo,"%.2f\n",matrizD[i]);
 	}
 	
 	fclose(arquivo);	
 	
-  return 0;
-  
+	return 0;  
   
 }
