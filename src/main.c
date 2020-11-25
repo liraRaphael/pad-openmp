@@ -30,9 +30,8 @@ float random_number();
 float * alocar(int dimensaoA,int dimensaoB);
 float * gerarMatriz(char * path,int dimensaoA,int dimensaoB);
 float * lerArquivo(char * path,int dimensaoA,int dimensaoB);
-float * calculaMatrizAB(float * matrizA,float * matrizB);
-float * calculaMatrizDABC();
-double reducaoMatrizD();
+void calculaMatrizDABC();
+void reducaoMatrizD();
 
 
 
@@ -45,7 +44,8 @@ double reducaoMatrizD();
  *
 **/
 int 
-    y,w,v; //variavel que guardará os valores da coluna
+    y,w,v, //variavel que guardará os valores da coluna
+	i,j,k; // variaveis de controle 
 
 //aloca e le os arquivos do vetor
 float 
@@ -54,7 +54,9 @@ float
 	* matrizC, 
 	* matrizD,
 	* matrizAB;
-
+	
+double
+	reducao;	//salvara o resultado da redução
 
 /***
  *
@@ -73,7 +75,6 @@ float random_number(){
 // inicializa uma matriz com o valor 0.0
 float * zeraMatriz(float * matriz, int dimensaoA, int dimensaoB){
 	int 
-		i,
 		MAX = dimensaoA * dimensaoB;
 	
 	#pragma omp parallel for shared(matriz,MAX) private(i)	
@@ -157,11 +158,7 @@ float * lerArquivo(char * path,int dimensaoA,int dimensaoB){
 * - Calcula a matriz D = (A x B) x C
 *
 */
-float * calculaMatrizDABC(){
-
-	int
-		i,j,k;
-		  
+void calculaMatrizDABC(){		  
 	#pragma omp parallel for collapse(3) shared(y,w,v,matrizA,matrizB,matrizAB) private(i,j,k)
 	for(i=0;i<y;i++){	       							
 		for(j=0;j<v;j++){	         						
@@ -178,27 +175,16 @@ float * calculaMatrizDABC(){
 	    }	
 	}
 
- 
-	return matrizD;
- 
 }
 
 
-double reducaoMatrizD(){
-  
-	int
-		i;
-  
-	double
-    	reducao = 0;
+void reducaoMatrizD(){
     
 	#pragma omp parallel for reduction(+:reducao) shared(matrizD,y) private(i)
 	for(i=0;i<y;i++){             
 		reducao += matrizD[i];
 	}
- 
-	return reducao;
- 
+
 }
 
 
@@ -219,15 +205,9 @@ int main(int argc,char ** argv){
 		return 1;
 	}	
  
-  
-  	int
-    	i;
     
 	clock_t 
 		tIni,tFim;  	
-  
-  	double
-		reducao;	//salvara o resultado da redução
 		
 		
 	// atribui os valores de dimensão da matriz
