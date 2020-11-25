@@ -163,12 +163,12 @@ void calculaMatrizDABC(){
 	for(i=0;i<y;i++){	       							
 		for(j=0;j<v;j++){	         						
 			for(k=0;k<w;k++){	
-        matrizAB[posicao(i,j,v)] += (matrizA[posicao(i,k,w)] * matrizB[posicao(k,j,v)]) ;	
+				matrizAB[posicao(i,j,v)] += (matrizA[posicao(i,k,w)] * matrizB[posicao(k,j,v)]) ;										
 			}
 		}					
 	}
 
-	#pragma omp parallel for shared(y,v,matrizD,matrizC,matrizAB) private(i,j)
+	#pragma omp parallel for shared(y,v,matrizD,matrizC) private(i,j)
 	for(i=0;i<y;i++){	 
 	    for(j=0;j<v;j++){	      
 			  matrizD[i] += matrizAB[posicao(i,j,v)] * matrizC[j];							
