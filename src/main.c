@@ -240,8 +240,8 @@ int main(int argc,char ** argv){
 
    	//grava o tempo incial
    	tIni = clock();     
-   	matrizD = calculaMatrizDABC();
-   	reducao = reducaoMatrizD();	  
+   	calculaMatrizDABC();
+   	reducaoMatrizD();	  
 	//grava o tempo final
 	tFim = clock();
 	
